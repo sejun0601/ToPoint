@@ -1,0 +1,43 @@
+<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.home.HomeFragment"
+    app:layoutDescription="@xml/motion_scene">
+
+    <fragment
+        android:id="@+id/map_fragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <RelativeLayout
+        android:id="@+id/sliding_panel"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:background="@drawable/rounded_top_panel"
+        android:elevation="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="parent">
+
+        <!-- 패널 내부에 배치할 내용 -->
+        <TextView
+            android:id="@+id/panel_header"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/rounded_top_panel"
+            android:gravity="center"
+            android:text="Slide Up Panel"
+            android:textSize="20sp"/>
+
+        <!-- 추가적인 내용물 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/panel_header"
+            android:layout_margin="16dp"
+            android:text="Panel Content"/>
+
+    </RelativeLayout>
+</androidx.constraintlayout.motion.widget.MotionLayout>
