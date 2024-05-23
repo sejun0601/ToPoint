@@ -14,6 +14,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.sothree.slidinguppanel.SlidingUpPanelLayout
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -31,9 +32,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
-        // 지도 설정
+        // Set up the map
         val mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        // Set up the sliding panel
+        val slidingLayout = root.findViewById<SlidingUpPanelLayout>(R.id.sliding_layout)
+        slidingLayout.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+            override fun onPanelSlide(panel: View, slideOffset: Float) {
+                // Handle the panel sliding
+            }
+
+            override fun onPanelStateChanged(panel: View, previousState: SlidingUpPanelLayout.PanelState, newState: SlidingUpPanelLayout.PanelState) {
+                // Handle the panel state change
+            }
+        })
 
         return root
     }
