@@ -24,6 +24,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <EditText
+            android:id="@+id/search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search"
+            android:background="@drawable/search_tab"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="16dp"
+            android:elevation="10dp"/>
+
     </FrameLayout>
 
     <RelativeLayout
@@ -31,7 +41,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/rounded_panel_background"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:elevation="10dp"
+        android:layout_marginTop="100dp">
 
         <TextView
             android:id="@+id/panel_header"
@@ -42,11 +54,13 @@
             android:text="Slide Up Panel"
             android:textSize="20sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/panel_header"
-            android:layout_margin="16dp"
-            android:text="Panel Content" />
+        <ListView
+            android:id="@+id/panel_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="100dp"
+            android:padding="16dp"
+            />
+
     </RelativeLayout>
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>

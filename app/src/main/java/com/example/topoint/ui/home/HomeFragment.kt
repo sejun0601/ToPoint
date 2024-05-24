@@ -1,9 +1,15 @@
 package com.example.topoint.ui.home
 
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.ListView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.topoint.R
@@ -14,7 +20,15 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
+
+
+
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -22,6 +36,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private val binding get() = _binding!!
     private lateinit var mMap: GoogleMap
     private lateinit var homeViewModel: HomeViewModel
+    private lateinit var placesClient : PlacesClient
+    private lateinit var searchAdapter: ArrayAdapter<String>
+    private val  searchResults = mutableListOf<AutocompletePrediction>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,6 +48,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val root: View = binding.root
 
         homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+
+        val apiKey = getApiKey()
+
+        // Initialize the Places SDK
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), apiKey)
+        }
+        placesClient = Places.createClient(requireContext())
+
 
         // Set up the map
         val mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
@@ -48,7 +74,40 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
         })
 
+        val searchBar: EditText = root.findViewById(R.id.search_bar)
+        val panelList: ListView = root.findViewById(R.id.panel_list)
+
+        searchAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, mutableListOf<String>())
+        panelList.adapter = searchAdapter
+
+        searchBar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                s?.let {
+                    searchPlaces(it.toString())
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        panelList.setOnItemClickListener { _, _, position, _ ->
+            val selectedPlace = searchResults[position]
+            val placeId = selectedPlace.placeId
+            // Get the place details and update the map
+            getPlaceDetails(placeId)
+        }
+
         return root
+    }
+
+
+
+    private fun getApiKey(): String {
+        val ai = requireContext().packageManager.getApplicationInfo(requireContext().packageName, PackageManager.GET_META_DATA)
+        val bundle = ai.metaData
+        return bundle.getString("com.google.android.geo.API_KEY") ?: ""
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -66,6 +125,41 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun addMarkerOnLocation(latLng: LatLng) {
         mMap.addMarker(MarkerOptions().position(latLng).title("New Marker"))
         homeViewModel.updateLocation(latLng)
+    }
+
+    private fun searchPlaces(query: String) {
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setQuery(query)
+            .build()
+
+        placesClient.findAutocompletePredictions(request).addOnSuccessListener { response ->
+            searchResults.clear()
+            searchResults.addAll(response.autocompletePredictions)
+            val resultNames = response.autocompletePredictions.map { it.getFullText(null).toString() }
+            searchAdapter.clear()
+            searchAdapter.addAll(resultNames)
+            searchAdapter.notifyDataSetChanged()
+        }.addOnFailureListener { exception ->
+            exception.printStackTrace()
+        }
+    }
+
+    private fun getPlaceDetails(placeId: String) {
+        // Use the Places API to get the place details and update the map
+        val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
+        val request = com.google.android.libraries.places.api.net.FetchPlaceRequest.newInstance(placeId, placeFields)
+
+        placesClient.fetchPlace(request).addOnSuccessListener { response ->
+            val place = response.place
+            val location = place.latLng
+            location?.let {
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 15f))
+                mMap.addMarker(MarkerOptions().position(it).title(place.name))
+                homeViewModel.updateLocation(it)
+            }
+        }.addOnFailureListener { exception ->
+            exception.printStackTrace()
+        }
     }
 
     override fun onDestroyView() {
